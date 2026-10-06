@@ -1,4 +1,0 @@
-Pillow>=10.0
-git+https://github.com/CyberAgentAILab/cr-renderer
-fastapi>=0.117.1,<1
-jsonschema>=4.23,<5
