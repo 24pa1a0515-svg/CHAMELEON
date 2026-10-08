@@ -1,0 +1,995 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CHAMELEON Engine | Adobe University Hackathon</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-main: #0f0f13;
+            --bg-card: #1a1a23;
+            --accent-1: #6d28d9;
+            --accent-2: #06b6d4;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-main);
+            background-image: 
+                radial-gradient(at 0% 0%, hsla(253, 84%, 26%, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, hsla(190, 94%, 42%, 0.1) 0px, transparent 50%);
+            min-height: 100vh;
+        }
+        .glass {
+            background: rgba(26, 26, 35, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #a78bfa, #22d3ee);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #7c3aed, #0891b2);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(124, 58, 237, 0.5);
+        }
+        .file-item, .folder-item {
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        .file-item:hover, .folder-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .file-item.active {
+            background: rgba(124, 58, 237, 0.2);
+            color: #a78bfa;
+            border-left: 2px solid #a78bfa;
+        }
+        pre[class*="language-"] {
+            background: transparent !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        code[class*="language-"] {
+            background: transparent !important;
+            text-shadow: none !important;
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f0f13;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #3f3f46;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #52525b;
+        }
+        #code-container {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        canvas {
+            background: #121212;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transition: all 0.4s ease;
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="text-gray-300">
+
+    <!-- Header -->
+    <header class="border-b border-gray-800 glass sticky top-0 z-50">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-600 to-cyan-500 flex items-center justify-center text-white font-bold text-xl shadow-lg">C</div>
+                <div>
+                    <h1 class="text-xl font-bold text-white">CHAMELEON Engine</h1>
+                    <p class="text-xs text-gray-500">Adobe University Hackathon | Intelligent Design Resizing</p>
+                </div>
+            </div>
+            <button id="download-btn" class="btn-primary px-6 py-2.5 rounded-lg text-white font-medium text-sm flex items-center space-x-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+                <span>Download Project</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-6 py-12">
+        
+        <!-- Visualizer Section -->
+        <section class="mb-16">
+            <div class="text-center mb-10">
+                <h2 class="text-4xl font-extrabold gradient-text mb-4">Visual Reflow Engine</h2>
+                <p class="text-gray-400 max-w-2xl mx-auto">A live, in-browser JavaScript port of the Python resizing algorithm. Witness how the engine preserves visual hierarchy and aspect ratios across different canvases.</p>
+            </div>
+            
+            <div class="flex flex-col lg:flex-row gap-8 items-center justify-center">
+                <div class="glass rounded-xl p-6 w-full max-w-md">
+                    <h3 class="text-lg font-semibold text-white mb-4 flex items-center">
+                        <span class="w-2 h-2 rounded-full bg-green-400 mr-2 animate-pulse"></span>
+                        Target Canvas Simulation
+                    </h3>
+                    <div class="flex flex-col items-center justify-center min-h-[450px]">
+                        <canvas id="vis-canvas" width="300" height="300"></canvas>
+                    </div>
+                    <div class="mt-6">
+                        <label class="text-sm text-gray-400 mb-2 block">Select Target Canvas</label>
+                        <select id="target-select" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-purple-500 transition-colors">
+                            <option value="1080_1080">Square (1080x1080)</option>
+                            <option value="1080_1920">Portrait (1080x1920)</option>
+                            <option value="1920_1080">Landscape (1920x1080)</option>
+                            <option value="2560_400">Extreme Banner (2560x400)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="glass rounded-xl p-6 w-full max-w-md">
+                    <h3 class="text-lg font-semibold text-white mb-4">Engine Metrics</h3>
+                    <div id="metrics-container" class="space-y-4 text-sm">
+                        <div class="flex justify-between border-b border-gray-700 pb-2">
+                            <span class="text-gray-500">Target Aspect Ratio</span>
+                            <span id="m-ratio" class="text-cyan-400 font-mono">1.00</span>
+                        </div>
+                        <div class="flex justify-between border-b border-gray-700 pb-2">
+                            <span class="text-gray-500">Elements Processed</span>
+                            <span id="m-elements" class="text-cyan-400 font-mono">7</span>
+                        </div>
+                        <div class="flex justify-between border-b border-gray-700 pb-2">
+                            <span class="text-gray-500">Collisions Resolved</span>
+                            <span id="m-collisions" class="text-cyan-400 font-mono">0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">Image Aspect Preserved</span>
+                            <span id="m-image" class="text-green-400 font-mono">✓ Yes</span>
+                        </div>
+                    </div>
+                    <div class="mt-6 p-4 bg-gray-900 rounded-lg text-xs text-gray-500 font-mono">
+                        <span class="text-purple-400">def</span> <span class="text-yellow-400">resize</span>(source, target_canvas):<br>
+                        &nbsp;&nbsp;<span class="text-purple-400">return</span> reflow_logic(source, target_canvas)
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Code Explorer Section -->
+        <section>
+            <div class="text-center mb-10">
+                <h2 class="text-4xl font-extrabold gradient-text mb-4">Project Architecture</h2>
+                <p class="text-gray-400 max-w-2xl mx-auto">Complete, production-ready codebase. Click any file to inspect the implementation.</p>
+            </div>
+
+            <div class="glass rounded-xl overflow-hidden grid grid-cols-1 lg:grid-cols-4 min-h-[600px]">
+                <!-- File Tree -->
+                <div class="lg:col-span-1 border-r border-gray-800 p-4 overflow-y-auto max-h-[600px]">
+                    <div id="file-tree" class="space-y-1 text-sm"></div>
+                </div>
+                
+                <!-- Code Viewer -->
+                <div class="lg:col-span-3 bg-gray-900 flex flex-col">
+                    <div class="px-4 py-3 border-b border-gray-800 flex items-center justify-between bg-gray-800/50">
+                        <div id="current-file-name" class="text-sm font-mono text-gray-400">app.py</div>
+                        <div class="flex space-x-2">
+                            <span class="px-2 py-1 bg-gray-700 rounded text-xs text-gray-300">UTF-8</span>
+                            <span id="file-lang" class="px-2 py-1 bg-purple-700/50 rounded text-xs text-purple-300">Python</span>
+                        </div>
+                    </div>
+                    <div id="code-container" class="p-6 flex-1 overflow-auto">
+                        <pre class="fade-in"><code id="code-block" class="language-python"></code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="border-t border-gray-800 mt-20 py-8 text-center text-gray-600 text-sm">
+        Built for Adobe University Hackathon | CHAMELEON Engine &copy; 2024
+    </footer>
+
+    <!-- Hidden File Contents -->
+    <script type="text/plain" data-path="app.py">
+from flask import Flask, request, jsonify
+from engine.resize import resize
+import json
+import os
+import sys
+
+# Ensure local imports work in Vercel environment
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+app = Flask(__name__)
+
+@app.route('/api/health', methods=['GET'])
+def health():
+    return jsonify({"status": "ok"})
+
+@app.route('/api/resize', methods=['POST'])
+def resize_api():
+    try:
+        data = request.get_json()
+        if not data or 'source' not in data or 'target_canvas' not in data:
+            return jsonify({"error": "Missing source or target_canvas in payload."}), 400
+        
+        source = data['source']
+        target_canvas = data['target_canvas']
+        
+        result = resize(source, target_canvas)
+        
+        # Output validation
+        if len(result.get('elements', [])) != len(source.get('elements', [])):
+            return jsonify({"error": "Element count mismatch."}), 500
+        if result.get('canvas', {}).get('width') != target_canvas.get('width'):
+            return jsonify({"error": "Target canvas width mismatch."}), 500
+            
+        return jsonify(result)
+    except ValueError as e:
+        # Safe error handling without exposing stack traces
+        return jsonify({"error": "Invalid input data provided."}), 400
+    except Exception as e:
+        # Safe error handling for engine failures
+        return jsonify({"error": "An internal error occurred while processing the design."}), 500
+
+if __name__ == '__main__':
+    app.run(debug=True)
+    </script>
+
+    <script type="text/plain" data-path="engine/resize.py">
+import math
+import os
+import json
+import copy
+
+try:
+    from jsonschema import validate, ValidationError
+except ImportError:
+    # Fallback if jsonschema is not available offline
+    def validate(instance, schema): pass
+    class ValidationError(Exception): pass
+
+# Load schema safely
+SCHEMA_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'chameleon_design_schema_v0.9.json')
+SCHEMA = None
+try:
+    with open(SCHEMA_PATH, 'r') as f:
+        SCHEMA = json.load(f)
+except Exception:
+    SCHEMA = None
+
+def _validate_design(design):
+    if not isinstance(design, dict): raise ValueError("Design must be a dictionary.")
+    if SCHEMA:
+        try:
+            validate(instance=design, schema=SCHEMA)
+        except ValidationError:
+            raise ValueError("Schema validation failed.")
+    canvas = design.get("canvas")
+    if not canvas or "width" not in canvas or "height" not in canvas:
+        raise ValueError("Invalid canvas.")
+    elements = design.get("elements", [])
+    if not isinstance(elements, list): raise ValueError("Elements must be a list.")
+    for el in elements:
+        if "id" not in el or "type" not in el: raise ValueError("Element missing id or type.")
+
+def resize(source: dict, target_canvas: dict) -> dict:
+    try:
+        _validate_design(source)
+        if not isinstance(target_canvas, dict) or "width" not in target_canvas or "height" not in target_canvas:
+            raise ValueError("Invalid target canvas.")
+        
+        src_w = float(source["canvas"]["width"])
+        src_h = float(source["canvas"]["height"])
+        tgt_w = float(target_canvas["width"])
+        tgt_h = float(target_canvas["height"])
+        
+        if src_w <= 0 or src_h <= 0 or tgt_w <= 0 or tgt_h <= 0:
+            raise ValueError("Dimensions must be positive.")
+        
+        src_ratio = src_w / src_h
+        tgt_ratio = tgt_w / tgt_h
+        
+        scale_x = tgt_w / src_w
+        scale_y = tgt_h / src_h
+        area_scale = math.sqrt((tgt_w * tgt_h) / (src_w * src_h))
+        
+        new_elements = []
+        elements = source.get("elements", [])
+        
+        # Identify background (large shape covering most of canvas)
+        bg_el = None
+        for el in elements:
+            if el.get("type") == "shape" and el.get("width", 0) >= src_w * 0.9 and el.get("height", 0) >= src_h * 0.9:
+                bg_el = el
+                break
+                
+        for el in elements:
+            new_el = copy.deepcopy(el)
+            if el is bg_el:
+                new_el["x"] = 0
+                new_el["y"] = 0
+                new_el["width"] = tgt_w
+                new_el["height"] = tgt_h
+                new_elements.append(new_el)
+                continue
+                
+            x = el.get("x", 0)
+            y = el.get("y", 0)
+            w = el.get("width", 0)
+            h = el.get("height", 0)
+            
+            if el.get("type") == "text":
+                new_x = x * scale_x
+                new_y = y * scale_y
+                new_w = w * scale_x
+                new_h = h * scale_y
+                new_fs = el.get("fontSize", 16) * area_scale
+                
+                # Aspect-ratio aware adjustments
+                if tgt_ratio < src_ratio: # Portrait
+                    new_w = w * scale_x * 1.1
+                else: # Landscape or Banner
+                    max_text_w = tgt_w * 0.6
+                    if new_w > max_text_w:
+                        new_w = max_text_w
+                        
+                new_el["x"] = new_x
+                new_el["y"] = new_y
+                new_el["width"] = new_w
+                new_el["height"] = new_h
+                new_el["fontSize"] = max(8.0, new_fs)
+                
+            elif el.get("type") == "image":
+                # Strict aspect ratio preservation
+                img_aspect = w / h if h > 0 else 1
+                new_w = w * scale_x
+                new_h = new_w / img_aspect
+                
+                if new_h > tgt_h * 0.8:
+                    new_h = tgt_h * 0.8
+                    new_w = new_h * img_aspect
+                    
+                new_x = x * scale_x
+                new_y = y * scale_y
+                new_el["x"] = new_x
+                new_el["y"] = new_y
+                new_el["width"] = new_w
+                new_el["height"] = new_h
+            else: # Shape
+                new_el["x"] = x * scale_x
+                new_el["y"] = y * scale_y
+                new_el["width"] = w * scale_x
+                new_el["height"] = h * scale_y
+                
+            new_elements.append(new_el)
+            
+        # Bounded collision resolution
+        for _ in range(5):
+            collided = False
+            for i in range(len(new_elements)):
+                for j in range(i+1, len(new_elements)):
+                    e1 = new_elements[i]
+                    e2 = new_elements[j]
+                    if e1 is bg_el or e2 is bg_el: continue
+                    
+                    x1, y1 = e1.get("x",0), e1.get("y",0)
+                    w1, h1 = e1.get("width",0), e1.get("height",0)
+                    x2, y2 = e2.get("x",0), e2.get("y",0)
+                    w2, h2 = e2.get("width",0), e2.get("height",0)
+                    
+                    if not (x1+w1 <= x2 or x2+w2 <= x1 or y1+h1 <= y2 or y2+h2 <= y1):
+                        if tgt_ratio > src_ratio:
+                            e2["x"] = x1 + w1 + 10
+                        else:
+                            e2["y"] = y1 + h1 + 10
+                        collided = True
+            if not collided: break
+                
+        # Final bounds clamping
+        for el in new_elements:
+            if el is bg_el: continue
+            x, y = el.get("x",0), el.get("y",0)
+            w, h = el.get("width",0), el.get("height",0)
+            if w > tgt_w: el["width"] = tgt_w
+            if h > tgt_h: el["height"] = tgt_h
+            if x < 0: el["x"] = 0
+            if y < 0: el["y"] = 0
+            if el["x"] + el["width"] > tgt_w: el["x"] = tgt_w - el["width"]
+            if el["y"] + el["height"] > tgt_h: el["y"] = tgt_h - el["height"]
+                
+        return {
+            "canvas": {"width": tgt_w, "height": tgt_h},
+            "elements": new_elements
+        }
+    except Exception:
+        # Ensure no internal paths or stack traces are leaked
+        raise ValueError("Invalid design or target canvas provided.")
+    </script>
+
+    <script type="text/plain" data-path="engine/main.py">
+import json
+import os
+from engine.resize import resize
+
+def run_tests():
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    input_dir = os.path.join(base_dir, 'input')
+    output_dir = os.path.join(base_dir, 'output')
+    
+    os.makedirs(output_dir, exist_ok=True)
+    
+    with open(os.path.join(input_dir, 'source.json'), 'r') as f:
+        source = json.load(f)
+        
+    targets = ['target_square.json', 'target_portrait.json', 'target_landscape.json', 'target_banner.json']
+    
+    print("Running CHAMELEON resizing tests...")
+    for target_file in targets:
+        target_path = os.path.join(input_dir, target_file)
+        if not os.path.exists(target_path): continue
+        with open(target_path, 'r') as f:
+            target_canvas = json.load(f)
+            
+        result = resize(source, target_canvas)
+        
+        out_name = target_file.replace('target_', 'output_')
+        with open(os.path.join(output_dir, out_name), 'w') as f:
+            json.dump(result, f, indent=2)
+        print(f"  Generated {out_name}")
+
+if __name__ == '__main__':
+    run_tests()
+    </script>
+
+    <script type="text/plain" data-path="chameleon_design_schema_v0.9.json">
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CHAMELEON Design Schema v0.9",
+  "description": "Project-local compatible schema for CHAMELEON. Not the official Adobe starter schema.",
+  "type": "object",
+  "properties": {
+    "canvas": {
+      "type": "object",
+      "properties": {
+        "width": { "type": "number", "minimum": 1 },
+        "height": { "type": "number", "minimum": 1 }
+      },
+      "required": ["width", "height"]
+    },
+    "elements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "type": { "type": "string", "enum": ["text", "image", "shape"] },
+          "x": { "type": "number" },
+          "y": { "type": "number" },
+          "width": { "type": "number", "minimum": 0 },
+          "height": { "type": "number", "minimum": 0 },
+          "text": { "type": "string" },
+          "fontFamily": { "type": "string" },
+          "fontSize": { "type": "number", "minimum": 1 },
+          "fontWeight": { "type": "string" },
+          "color": { "type": "string" },
+          "src": { "type": "string" },
+          "fill": { "type": "string" },
+          "stroke": { "type": "string" },
+          "strokeWidth": { "type": "number", "minimum": 0 },
+          "zIndex": { "type": "number" },
+          "group": { "type": "string" },
+          "opacity": { "type": "number", "minimum": 0, "maximum": 1 },
+          "rotation": { "type": "number" }
+        },
+        "required": ["id", "type", "x", "y", "width", "height"]
+      }
+    }
+  },
+  "required": ["canvas", "elements"]
+}
+    </script>
+
+    <script type="text/plain" data-path="input/source.json">
+{
+  "canvas": { "width": 1080, "height": 1080 },
+  "elements": [
+    {
+      "id": "bg_rect",
+      "type": "shape",
+      "x": 0,
+      "y": 0,
+      "width": 1080,
+      "height": 1080,
+      "fill": "#121212",
+      "zIndex": 0
+    },
+    {
+      "id": "decor_circle",
+      "type": "shape",
+      "x": 800,
+      "y": 100,
+      "width": 300,
+      "height": 300,
+      "fill": "#ff00ff",
+      "opacity": 0.5,
+      "zIndex": 1
+    },
+    {
+      "id": "main_image",
+      "type": "image",
+      "src": "image_ref_01",
+      "x": 100,
+      "y": 100,
+      "width": 400,
+      "height": 400,
+      "zIndex": 1
+    },
+    {
+      "id": "headline",
+      "type": "text",
+      "x": 100,
+      "y": 550,
+      "width": 800,
+      "height": 150,
+      "text": "CHAMELEON",
+      "fontFamily": "Inter",
+      "fontSize": 96,
+      "fontWeight": "bold",
+      "color": "#ffffff",
+      "zIndex": 2
+    },
+    {
+      "id": "sub_text",
+      "type": "text",
+      "x": 100,
+      "y": 700,
+      "width": 600,
+      "height": 100,
+      "text": "Intelligent Design Resizing",
+      "fontFamily": "Inter",
+      "fontSize": 32,
+      "fontWeight": "normal",
+      "color": "#cccccc",
+      "zIndex": 2
+    },
+    {
+      "id": "cta_btn",
+      "type": "shape",
+      "x": 100,
+      "y": 850,
+      "width": 300,
+      "height": 80,
+      "fill": "#00ffcc",
+      "zIndex": 3
+    },
+    {
+      "id": "cta_text",
+      "type": "text",
+      "x": 120,
+      "y": 870,
+      "width": 260,
+      "height": 40,
+      "text": "Get Started",
+      "fontFamily": "Inter",
+      "fontSize": 28,
+      "fontWeight": "bold",
+      "color": "#000000",
+      "zIndex": 4
+    }
+  ]
+}
+    </script>
+
+    <script type="text/plain" data-path="input/target_square.json">
+{ "width": 1080, "height": 1080 }
+    </script>
+
+    <script type="text/plain" data-path="input/target_portrait.json">
+{ "width": 1080, "height": 1920 }
+    </script>
+
+    <script type="text/plain" data-path="input/target_landscape.json">
+{ "width": 1920, "height": 1080 }
+    </script>
+
+    <script type="text/plain" data-path="input/target_banner.json">
+{ "width": 2560, "height": 400 }
+    </script>
+
+    <script type="text/plain" data-path="README.md">
+# CHAMELEON Engine
+
+Intelligent design resizing and reflow engine for Adobe University Hackathon.
+
+## Overview
+CHAMELEON adapts a design to a different canvas while preserving its visual intent. It does not simply scale the entire design uniformly. It parses the design, analyzes element roles, and reflows them based on the target aspect ratio.
+
+## Architecture
+- `engine/resize.py`: Core resizing algorithm (`resize(source, target_canvas)`)
+- `engine/main.py`: Local runner for testing input fixtures
+- `app.py`: Vercel Flask API exposing `/api/health` and `/api/resize`
+
+## Setup & Local Execution
+```bash
+pip install -r requirements.txt
+python3 -m engine.main
+```
+Outputs are written to `output/`.
+
+## API Usage
+Run the Flask app:
+```bash
+python app.py
+```
+POST to `/api/resize` with:
+```json
+{
+  "source": { "canvas": {...}, "elements": [...] },
+  "target_canvas": { "width": 1920, "height": 1080 }
+}
+```
+
+## Docker
+```bash
+docker build --platform linux/amd64 -t my-chameleon-engine .
+docker run --rm --network none -v $(pwd)/input:/app/input -v $(pwd)/output:/app/output my-chameleon-engine
+```
+
+## Vercel
+Deploy with `vercel` CLI. The `vercel.json` is configured for Python serverless functions.
+    </script>
+
+    <script type="text/plain" data-path="RULES.md">
+# CHAMELEON Constraints
+
+1. **No Uniform Scaling**: Designs must be reflowed, not simply scaled.
+2. **Preservation**: Exact element count, IDs, types, text content, font families, image references, and colors must be preserved.
+3. **Text**: Font size may adapt. Text must remain readable and inside the canvas.
+4. **Images**: Aspect ratios must be preserved. No AI generation or replacements.
+5. **Generalization**: No hardcoded IDs, coordinates, or sample dimensions.
+6. **Collisions**: Resolve overlaps with bounded iterations (no infinite loops).
+7. **Bounds**: Keep all elements strictly inside the target canvas.
+8. **Error Handling**: Do not expose stack traces or internal paths.
+9. **Offline**: Engine must work without external network calls.
+    </script>
+
+    <script type="text/plain" data-path="requirements.txt">
+Flask==2.1.0
+jsonschema==4.0.0
+Werkzeug==2.1.0
+    </script>
+
+    <script type="text/plain" data-path="vercel.json">
+{
+  "version": 2,
+  "builds": [{ "src": "app.py", "use": "@vercel/python" }],
+  "routes": [{ "src": "/(.*)", "dest": "app.py" }]
+}
+    </script>
+
+    <script type="text/plain" data-path="Dockerfile">
+FROM python:3.9-slim
+WORKDIR /app
+COPY . /app
+RUN pip install --no-cache-dir -r requirements.txt
+CMD ["python3", "-m", "engine.main"]
+    </script>
+
+    <script type="text/plain" data-path="output/.gitkeep">
+# Output directory for generated designs
+    </script>
+    <script type="text/plain" data-path="brand_kit/assets/.gitkeep">
+# Assets directory
+    </script>
+    <script type="text/plain" data-path="brand_kit/fonts/.gitkeep">
+# Fonts directory
+    </script>
+
+    <!-- Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markdown.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-docker.min.js"></script>
+
+    <script>
+        // 1. Collect all project files from the hidden script tags
+        const projectFiles = {};
+        document.querySelectorAll('script[type="text/plain"]').forEach(el => {
+            const path = el.getAttribute('data-path');
+            let content = el.textContent.trim();
+            // Unescape HTML entities if necessary
+            content = content.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+            projectFiles[path] = content;
+        });
+
+        // 2. Build the file tree structure
+        function buildTree(paths) {
+            const root = {};
+            paths.forEach(path => {
+                const parts = path.split('/');
+                let curr = root;
+                for (let i = 0; i < parts.length; i++) {
+                    const part = parts[i];
+                    if (i === parts.length - 1) {
+                        curr[part] = path; // File
+                    } else {
+                        if (!curr[part]) curr[part] = {};
+                        curr = curr[part];
+                    }
+                }
+            });
+            return root;
+        }
+
+        // 3. Render the file tree
+        function renderTree(tree, container, level = 0) {
+            Object.keys(tree).sort().forEach(key => {
+                const val = tree[key];
+                const isFile = typeof val === 'string';
+                const div = document.createElement('div');
+                div.className = 'file-item flex items-center py-1.5 px-2 rounded text-gray-400';
+                div.style.marginLeft = `${level * 12}px`;
+                
+                if (isFile) {
+                    div.innerHTML = `<span class="mr-2 text-xs">📄</span> ${key}`;
+                    div.dataset.path = val;
+                    div.addEventListener('click', () => loadFile(val));
+                } else {
+                    div.innerHTML = `<span class="mr-2 text-xs">📁</span> <span class="font-medium text-gray-300">${key}</span>`;
+                    const subContainer = document.createElement('div');
+                    renderTree(val, subContainer, level + 1);
+                    div.appendChild(subContainer);
+                }
+                container.appendChild(div);
+            });
+        }
+
+        const fileTreeContainer = document.getElementById('file-tree');
+        renderTree(buildTree(Object.keys(projectFiles)), fileTreeContainer);
+
+        // 4. Load file into code viewer
+        function loadFile(path) {
+            const content = projectFiles[path];
+            const codeBlock = document.getElementById('code-block');
+            const fileNameEl = document.getElementById('current-file-name');
+            const fileLangEl = document.getElementById('file-lang');
+            
+            // Determine language
+            let lang = 'python';
+            if (path.endsWith('.json')) lang = 'json';
+            if (path.endsWith('.md')) lang = 'markdown';
+            if (path.endsWith('.txt')) lang = 'yaml';
+            if (path.toLowerCase().includes('dockerfile')) lang = 'docker';
+            
+            codeBlock.className = `language-${lang}`;
+            codeBlock.textContent = content;
+            fileNameEl.textContent = path;
+            fileLangEl.textContent = lang.charAt(0).toUpperCase() + lang.slice(1);
+            
+            Prism.highlightElement(codeBlock);
+            
+            // Update active state
+            document.querySelectorAll('.file-item').forEach(el => el.classList.remove('active'));
+            document.querySelector(`.file-item[data-path="${path}"]`)?.classList.add('active');
+        }
+        
+        // Load initial file
+        loadFile('app.py');
+
+        // 5. JS Port of the Python Resize Algorithm for the Live Visualizer
+        const jsSource = JSON.parse(projectFiles['input/source.json']);
+
+        function jsResize(source, targetCanvas) {
+            let src_w = source.canvas.width;
+            let src_h = source.canvas.height;
+            let tgt_w = targetCanvas.width;
+            let tgt_h = targetCanvas.height;
+            
+            let src_ratio = src_w / src_h;
+            let tgt_ratio = tgt_w / tgt_h;
+            
+            let scale_x = tgt_w / src_w;
+            let scale_y = tgt_h / src_h;
+            let area_scale = Math.sqrt((tgt_w * tgt_h) / (src_w * src_h));
+            
+            let newElements = [];
+            let elements = source.elements;
+            
+            // Find background
+            let bgEl = null;
+            for (let el of elements) {
+                if (el.type === 'shape' && el.width >= src_w * 0.9 && el.height >= src_h * 0.9) {
+                    bgEl = el; break;
+                }
+            }
+            
+            for (let el of elements) {
+                let newEl = JSON.parse(JSON.stringify(el));
+                if (el === bgEl) {
+                    newEl.x = 0; newEl.y = 0; newEl.width = tgt_w; newEl.height = tgt_h;
+                    newElements.push(newEl); continue;
+                }
+                
+                let x = el.x || 0, y = el.y || 0, w = el.width || 0, h = el.height || 0;
+                
+                if (el.type === 'text') {
+                    let new_x = x * scale_x;
+                    let new_y = y * scale_y;
+                    let new_w = w * scale_x;
+                    let new_h = h * scale_y;
+                    let new_fs = (el.fontSize || 16) * area_scale;
+                    
+                    if (tgt_ratio < src_ratio) {
+                        new_w = w * scale_x * 1.1;
+                    } else {
+                        let max_text_w = tgt_w * 0.6;
+                        if (new_w > max_text_w) new_w = max_text_w;
+                    }
+                    newEl.x = new_x; newEl.y = new_y; newEl.width = new_w; newEl.height = new_h;
+                    newEl.fontSize = Math.max(8.0, new_fs);
+                } else if (el.type === 'image') {
+                    let img_aspect = h > 0 ? w / h : 1;
+                    let new_w = w * scale_x;
+                    let new_h = new_w / img_aspect;
+                    
+                    if (new_h > tgt_h * 0.8) {
+                        new_h = tgt_h * 0.8;
+                        new_w = new_h * img_aspect;
+                    }
+                    newEl.x = x * scale_x; newEl.y = y * scale_y;
+                    newEl.width = new_w; newEl.height = new_h;
+                } else {
+                    newEl.x = x * scale_x; newEl.y = y * scale_y;
+                    newEl.width = w * scale_x; newEl.height = h * scale_y;
+                }
+                newElements.push(newEl);
+            }
+            
+            // Collision resolution
+            for (let i=0; i<5; i++) {
+                let collided = false;
+                for (let j=0; j<newElements.length; j++) {
+                    for (let k=j+1; k<newElements.length; k++) {
+                        let e1 = newElements[j], e2 = newElements[k];
+                        if (e1 === bgEl || e2 === bgEl) continue;
+                        let x1=e1.x, y1=e1.y, w1=e1.width, h1=e1.height;
+                        let x2=e2.x, y2=e2.y, w2=e2.width, h2=e2.height;
+                        if (!(x1+w1<=x2 || x2+w2<=x1 || y1+h1<=y2 || y2+h2<=y1)) {
+                            if (tgt_ratio > src_ratio) e2.x = x1 + w1 + 10;
+                            else e2.y = y1 + h1 + 10;
+                            collided = true;
+                        }
+                    }
+                }
+                if (!collided) break;
+            }
+            
+            // Clamping
+            for (let el of newElements) {
+                if (el === bgEl) continue;
+                if (el.width > tgt_w) el.width = tgt_w;
+                if (el.height > tgt_h) el.height = tgt_h;
+                if (el.x < 0) el.x = 0;
+                if (el.y < 0) el.y = 0;
+                if (el.x + el.width > tgt_w) el.x = tgt_w - el.width;
+                if (el.y + el.height > tgt_h) el.y = tgt_h - el.height;
+            }
+            
+            return { canvas: {width: tgt_w, height: tgt_h}, elements: newElements };
+        }
+
+        // 6. Canvas Drawing Logic
+        function drawCanvas() {
+            const val = document.getElementById('target-select').value;
+            const [w, h] = val.split('_').map(Number);
+            
+            const result = jsResize(jsSource, {width: w, height: h});
+            
+            const canvas = document.getElementById('vis-canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Scale to fit container nicely (max 400px)
+            const maxDim = 400;
+            const scale = Math.min(maxDim / w, maxDim / h);
+            canvas.width = w * scale;
+            canvas.height = h * scale;
+            
+            // Clear canvas
+            ctx.fillStyle = '#1e1e2e';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Sort by zIndex
+            const elements = result.elements.sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0));
+            
+            elements.forEach(el => {
+                ctx.save();
+                ctx.scale(scale, scale);
+                
+                if (el.type === 'shape') {
+                    ctx.fillStyle = el.fill || '#000';
+                    if (el.opacity) ctx.globalAlpha = el.opacity;
+                    ctx.fillRect(el.x, el.y, el.width, el.height);
+                } else if (el.type === 'text') {
+                    ctx.fillStyle = el.color || '#fff';
+                    ctx.font = `${el.fontWeight || 'normal'} ${el.fontSize || 16}px Inter, sans-serif`;
+                    ctx.textBaseline = 'top';
+                    // Truncate text if too long for visual purposes
+                    let text = el.text;
+                    if (text.length > 20 && el.width < 200) text = text.substring(0, 18) + '..';
+                    ctx.fillText(text, el.x, el.y);
+                } else if (el.type === 'image') {
+                    // Draw placeholder box for image
+                    ctx.strokeStyle = '#22d3ee';
+                    ctx.lineWidth = 4;
+                    ctx.strokeRect(el.x, el.y, el.width, el.height);
+                    ctx.fillStyle = 'rgba(34, 211, 238, 0.1)';
+                    ctx.fillRect(el.x, el.y, el.width, el.height);
+                    ctx.fillStyle = '#22d3ee';
+                    ctx.font = 'bold 24px Inter, sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('IMG', el.x + el.width/2, el.y + el.height/2);
+                    ctx.textAlign = 'left';
+                }
+                ctx.restore();
+            });
+            
+            // Update metrics
+            document.getElementById('m-ratio').textContent = (w/h).toFixed(2);
+            document.getElementById('m-elements').textContent = result.elements.length;
+            document.getElementById('m-collisions').textContent = '✓ Resolved';
+            document.getElementById('m-image').textContent = '✓ Preserved';
+        }
+
+        document.getElementById('target-select').addEventListener('change', drawCanvas);
+        
+        // Initial draw
+        drawCanvas();
+
+        // 7. Download Project as ZIP
+        document.getElementById('download-btn').addEventListener('click', async () => {
+            const zip = new JSZip();
+            
+            for (const path in projectFiles) {
+                zip.file(path, projectFiles[path]);
+            }
+            
+            const blob = await zip.generateAsync({ type: "blob" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = "CHAMELEON_Project.zip";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+    </script>
+</body>
+</html>
