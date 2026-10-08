@@ -9,11 +9,13 @@ from engine.resize import resize
 app = Flask(__name__)
 
 
+@app.route("/api/health", methods=["GET"])
+@app.route("/health", methods=["GET"])
 @app.route("/", methods=["GET"])
-def index():
-    """Service status endpoint."""
+def health():
+    """Service health status endpoint."""
     return jsonify({
-        "status": "online",
+        "status": "ok",
         "service": "Project CHAMELEON Automatic Design Reflow API",
         "version": "0.9"
     }), 200
@@ -32,7 +34,7 @@ def api_resize():
         }
     """
     try:
-        data = request.get_json(silent=True)
+        data = request.get_json(silent=True, force=True)
         if not data or not isinstance(data, dict):
             return jsonify({"error": "Invalid request body: expected valid JSON object"}), 400
 
