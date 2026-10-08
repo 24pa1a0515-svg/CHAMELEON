@@ -4,47 +4,56 @@ Project CHAMELEON is an intelligent graphic design reflow engine that receives a
 
 Rather than naive stretching or uniform scaling, CHAMELEON preserves visual hierarchy, text legibility, element grouping, brand assets, and image aspect ratios.
 
+The project features a **project-local schema** (`chameleon_design_schema_v0.9.json`) and **generic generated test fixtures** in `input/` covering multiple aspect ratios.
+
 The repository supports **both**:
-1. **The official CHAMELEON local/Docker evaluation pipeline** (`python3 -m engine.main`).
+1. **The CHAMELEON local/Docker evaluation pipeline** (`python3 -m engine.main`).
 2. **A working Vercel deployment/API** (`app.py` serverless entrypoint).
 
 ---
 
-## Repo Layout
+## Required Structure
 
 ```text
-chameleon/
+CHAMELEON/
 ├── app.py                           <- Vercel Flask API entrypoint exposing engine.resize.resize()
 ├── vercel.json                      <- Vercel deployment configuration
-├── Dockerfile                       <- Container build spec for stage-one evaluation
+├── Dockerfile                       <- Container build spec for evaluation
 ├── README.md                        <- Project overview and guide
 ├── RULES.md                         <- Challenge rules and scoring specification
-├── requirements.txt                 <- Python dependencies (Pillow, Flask, cr-renderer)
-├── chameleon_design_schema_v0.9.json<- JSON schema spec
+├── requirements.txt                 <- Python dependencies (Pillow, Flask, cr-renderer, jsonschema)
+├── chameleon_design_schema_v0.9.json<- Project-local JSON schema spec
 │
 ├── engine/
 │   ├── main.py                      <- Local evaluation orchestrator
 │   └── resize.py                    <- Core intelligent design reflow algorithm
 │
 ├── brand_kit/
-│   ├── assets/                      <- Image assets referenced by asset_id
+│   ├── assets/                      <- Image assets referenced by asset_id / src
 │   └── fonts/                       <- Custom brand font files
 │
-├── input/                           <- Task JSON inputs (Level 1, Level 2, Level 3)
+├── input/                           <- Generic generated test fixtures
 └── output/                          <- Output JSON and rendered PNG files
 ```
 
 ---
 
-## High-Level Algorithm (`engine/resize.py`)
+## Resizing Algorithm (`engine/resize.py`)
 
-The reflow engine operates via a deterministic multi-step pipeline:
+The resizing algorithm is implemented in `engine/resize.py` with entrypoint:
 
-1. **Semantic Parsing & Role Classification**:
+```python
+def resize(source: dict, target_canvas: dict) -> dict:
+```
+
+The engine operates via a deterministic multi-step pipeline:
+
+1. **Property Normalization & Role Classification**:
+   - Supports both `snake_case` (`content`, `font_family`, `font_size`, `asset_id`, `fill_color`, `group_id`, `z_index`) and `camelCase` (`text`, `fontFamily`, `fontSize`, `src`, `fill`, `group`, `zIndex`).
    - Analyzes element dimensions, bounding box, z-index, opacity, and text/image/shape properties.
    - Infers visual roles (background layers, decorative accents, logos, hero images, headlines, subheads, CTAs, badges, ribbons, and legal text) without relying on hardcoded element IDs.
 2. **Group Identification & Unified Scaling**:
-   - Detects designer-intended units sharing a `group_id` (e.g. CTA buttons, badges, ribbons).
+   - Detects designer-intended units sharing a group ID (`group_id` / `group`).
    - Keeps text labels centered and properly proportioned relative to their background container shape.
 3. **Aspect Ratio Analysis & Strategy Selection**:
    - Computes target aspect ratio $AR_{tgt} = W_{tgt} / H_{tgt}$.
@@ -52,11 +61,11 @@ The reflow engine operates via a deterministic multi-step pipeline:
    - **Medium Landscape ($1.3 < AR_{tgt} \le 2.8$)**: Two-column split layout (Left: Hero Image; Right: Logo, Headline, Subhead, Badges, CTA).
    - **Extreme Leaderboard Banner ($AR_{tgt} > 2.8$, e.g. 728x90)**: Horizontal multi-zone ribbon flow (Logo -> Hero -> Headline/Subhead -> CTA -> Badges/Ribbon).
 4. **Dynamic Typography Sizing**:
-   - Calculates character capacity and line wrapping for text boxes.
-   - Adjusts `font_size` dynamically to ensure text fits box bounds legibly without line overflow.
-5. **Collision Resolution & Canvas Bounds Enforcement**:
+   - Calculates character capacity, explicit `\n` line breaks, and line wrapping for text boxes.
+   - Adjusts `font_size` / `fontSize` dynamically to ensure text fits box bounds legibly without line overflow.
+5. **Bounded Collision Resolution & Bounds Enforcement**:
+   - Uses bounded iterations (max 10 iterations) to detect and resolve unwanted overlaps between independent content elements.
    - Clamps non-decorative content strictly inside canvas boundaries $[0, 0, W_{tgt}, H_{tgt}]$.
-   - Preserves intentional corner bleed for background/decorative shapes (e.g. `deco_circle_1`).
 
 ---
 
@@ -76,7 +85,7 @@ python3 -m engine.main
 
 This processes every task in `input/*.json` and generates output artifacts in `output/`:
 - `<task>_output.json` (schema-valid resized design)
-- `<task>_output.png` (rendered visual preview via `cr-renderer`)
+- `<task>_output.png` (rendered visual preview)
 
 ---
 
@@ -84,46 +93,46 @@ This processes every task in `input/*.json` and generates output artifacts in `o
 
 The Vercel deployment wraps the exact same `engine.resize.resize()` implementation without any mock or fake data.
 
-### API Endpoint
+### API Endpoints
 
-- `POST /api/resize` (also supported on `/resize` and `/`)
-- `GET /` (Service health check)
+- `GET /api/health` -> Returns `{"status": "ok"}`
+- `POST /api/resize` -> Accepts source design JSON and target canvas JSON, calls `resize()`, returns resized JSON.
 
 ### Request Payload Example
 
 ```json
 {
   "source": {
-    "canvas": { "width": 1080, "height": 1080 },
+    "canvas": { "width": 1000, "height": 1000 },
     "elements": [
       {
-        "id": "bg",
+        "id": "el_bg",
         "type": "image",
         "x": 0,
         "y": 0,
-        "width": 1080,
-        "height": 1080,
+        "width": 1000,
+        "height": 1000,
         "z_index": 0,
         "asset_id": "solstice_bg_gradient.png",
         "fit": "cover"
       },
       {
-        "id": "headline",
+        "id": "el_main_headline",
         "type": "text",
-        "x": 140,
-        "y": 420,
+        "x": 100,
+        "y": 680,
         "width": 800,
-        "height": 160,
-        "z_index": 2,
-        "content": "Chase the Light",
+        "height": 120,
+        "z_index": 4,
+        "content": "Discover Golden Hour Refreshment",
         "font_family": "Solstice Serif",
-        "font_size": 60,
+        "font_size": 52,
         "color": "rgba(255,255,255,1)",
         "text_align": "center"
       }
     ]
   },
-  "target_canvas": { "width": 1080, "height": 1350 }
+  "target_canvas": { "width": 1000, "height": 1500 }
 }
 ```
 
@@ -131,7 +140,7 @@ The Vercel deployment wraps the exact same `engine.resize.resize()` implementati
 
 ```json
 {
-  "canvas": { "width": 1080, "height": 1350 },
+  "canvas": { "width": 1000, "height": 1500 },
   "elements": [ ... ]
 }
 ```
@@ -153,7 +162,7 @@ docker run --rm --network none \
 
 ## Testing
 
-Run all local pipeline tests and API validation:
+Run all local pipeline tests and schema validation:
 
 ```bash
 python3 -m engine.main
